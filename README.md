@@ -1,3 +1,3 @@
 # KUKI
 
-Coffee and Dessert Delivery Service
+Server for KUKI - Coffee and Dessert Delivery Service
