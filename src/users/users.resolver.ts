@@ -15,18 +15,18 @@ import { UserService } from './users.service';
 
 @Resolver((of) => User)
 export class UserResolver {
-  constructor(private readonly UserService: UserService) {}
+  constructor(private readonly usersService: UserService) {}
 
   @Mutation((returns) => CreateAccountOutput)
   async createAccount(
     @Args('input') createAccountInput: CreateAccountInput,
   ): Promise<CreateAccountOutput> {
-    return this.UserService.createAccount(createAccountInput);
+    return this.usersService.createAccount(createAccountInput);
   }
 
   @Mutation((returns) => LoginOutput)
   async login(@Args('input') loginInput: LoginInput): Promise<LoginOutput> {
-    return this.UserService.login(loginInput);
+    return this.usersService.login(loginInput);
   }
 
   @Query((returns) => User)
@@ -38,7 +38,7 @@ export class UserResolver {
   async userProfile(
     @Args() userProfileInput: UserProfileInput,
   ): Promise<UserProfileOutput> {
-    return this.UserService.findById(userProfileInput.userId);
+    return this.usersService.findById(userProfileInput.userId);
   }
 
   @Mutation((returns) => EditProfileOutput)
@@ -46,13 +46,13 @@ export class UserResolver {
     @AuthUser() authUser: User,
     @Args('input') editProfileInput: EditProfileInput,
   ): Promise<EditProfileOutput> {
-    return this.UserService.editProfile(authUser.id, editProfileInput);
+    return this.usersService.editProfile(authUser.id, editProfileInput);
   }
 
   @Mutation((returns) => VerifyEmailOutput)
   verifyEmail(
     @Args('input') { code }: VerifyEmailInput,
   ): Promise<VerifyEmailOutput> {
-    return this.UserService.verifyEmail(code);
+    return this.usersService.verifyEmail(code);
   }
 }

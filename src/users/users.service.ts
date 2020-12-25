@@ -54,7 +54,7 @@ export class UserService {
 
   async login({ email, password }: LoginInput): Promise<LoginOutput> {
     try {
-      const user = this.users.findOne(
+      const user = await this.users.findOne(
         { email },
         { select: ['id', 'password'] },
       );
@@ -64,14 +64,14 @@ export class UserService {
           error: 'User not found',
         };
       }
-      const passwordCorrect = (await user).checkPassword(password);
+      const passwordCorrect = await user.checkPassword(password);
       if (!passwordCorrect) {
         return {
           success: false,
           error: 'Wrong password',
         };
       }
-      const token = this.jwtService.sign((await user).id);
+      const token = this.jwtService.sign(user.id);
       return {
         success: true,
         token,
@@ -79,20 +79,18 @@ export class UserService {
     } catch (error) {
       return {
         success: false,
-        error,
+        error: 'Failed to sign in',
       };
     }
   }
 
   async findById(id: number): Promise<UserProfileOutput> {
     try {
-      const user = await this.users.findOne({ id });
-      if (user) {
-        return {
-          success: true,
-          user: user,
-        };
-      }
+      const user = await this.users.findOneOrFail({ id });
+      return {
+        success: true,
+        user,
+      };
     } catch (error) {
       return { success: false, error: 'User Not Found' };
     }
