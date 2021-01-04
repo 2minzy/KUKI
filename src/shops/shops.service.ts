@@ -4,16 +4,17 @@ import { User } from 'src/users/entities/user.entity';
 import { Like, Raw, Repository } from 'typeorm';
 import { AllCategoriesOutput } from './dtos/all-categories.dto';
 import { CategoryInput, CategoryOutput } from './dtos/category.dto';
+import { CreateDishInput, CreateDishOutput } from './dtos/create-dish.dto';
 import { CreateShopInput, CreateShopOutput } from './dtos/create-shop.dto';
+import { DeleteDishInput, DeleteDishOutput } from './dtos/delete-dish.dto';
 import { EditShopInput, EditShopOutput } from './dtos/edit-shop.dto';
 import { DeleteShopInput, DeleteShopOutput } from './dtos/delete-shop.dto';
+import { EditDishInput, EditDishOutput } from './dtos/edit-dish.dto';
 import { ShopInput, ShopOutput } from './dtos/shop.dto';
 import { ShopsInput, ShopsOutput } from './dtos/shops.dto';
-import {
-  SearchShopInput,
-  SearchShopOutput,
-} from './dtos/search-restaurant.dto';
+import { SearchShopInput, SearchShopOutput } from './dtos/search-shop.dto';
 import { Category } from 'src/shops/entities/category.entity';
+import { Dish } from './entities/dish.entity';
 import { Shop } from './entities/shop.entity';
 import { CategoryRepository } from './repositories/cateogory.repository';
 
@@ -22,7 +23,8 @@ export class ShopService {
   constructor(
     @InjectRepository(Shop)
     private readonly shops: Repository<Shop>,
-    @InjectRepository(Category)
+    @InjectRepository(Dish)
+    private readonly dishes: Repository<Dish>,
     private readonly categories: CategoryRepository,
   ) {}
 
@@ -196,7 +198,9 @@ export class ShopService {
 
   async findShopById({ shopId }: ShopInput): Promise<ShopOutput> {
     try {
-      const shop = await this.shops.findOne(shopId);
+      const shop = await this.shops.findOne(shopId, {
+        relations: ['menu'],
+      });
       if (!shop) {
         return {
           success: false,
@@ -237,6 +241,108 @@ export class ShopService {
       };
     } catch {
       return { success: false, error: 'Could not search for shops' };
+    }
+  }
+
+  async createDish(
+    owner: User,
+    createDishInput: CreateDishInput,
+  ): Promise<CreateDishOutput> {
+    try {
+      const shop = await this.shops.findOne(createDishInput.shopId);
+      if (!shop) {
+        return {
+          success: false,
+          error: 'Shop not found',
+        };
+      }
+      if (owner.id !== shop.ownerId) {
+        return {
+          success: false,
+          error: "You can't do that.",
+        };
+      }
+      await this.dishes.save(this.dishes.create({ ...createDishInput, shop }));
+      return {
+        success: true,
+      };
+    } catch (error) {
+      console.log(error);
+      return {
+        success: false,
+        error: 'Could not create dish',
+      };
+    }
+  }
+
+  async checkDishOwner(ownerId: number, dishId: number) {}
+
+  async editDish(
+    owner: User,
+    editDishInput: EditDishInput,
+  ): Promise<EditDishOutput> {
+    try {
+      const dish = await this.dishes.findOne(editDishInput.dishId, {
+        relations: ['shop'],
+      });
+      if (!dish) {
+        return {
+          success: false,
+          error: 'Dish not found',
+        };
+      }
+      if (dish.shop.ownerId !== owner.id) {
+        return {
+          success: false,
+          error: "You can't do that.",
+        };
+      }
+      await this.dishes.save([
+        {
+          id: editDishInput.dishId,
+          ...editDishInput,
+        },
+      ]);
+      return {
+        success: true,
+      };
+    } catch {
+      return {
+        success: false,
+        error: 'Could not delete dish',
+      };
+    }
+  }
+
+  async deleteDish(
+    owner: User,
+    { dishId }: DeleteDishInput,
+  ): Promise<DeleteDishOutput> {
+    try {
+      const dish = await this.dishes.findOne(dishId, {
+        relations: ['shop'],
+      });
+      if (!dish) {
+        return {
+          success: false,
+          error: 'Dish not found',
+        };
+      }
+      if (dish.shop.ownerId !== owner.id) {
+        return {
+          success: false,
+          error: "You can't do that.",
+        };
+      }
+      await this.dishes.delete(dishId);
+      return {
+        success: true,
+      };
+    } catch {
+      return {
+        success: false,
+        error: 'Could not delete dish',
+      };
     }
   }
 }

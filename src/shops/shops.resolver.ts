@@ -12,16 +12,17 @@ import { Role } from 'src/auth/role.decorator';
 import { User, UserRole } from 'src/users/entities/user.entity';
 import { AllCategoriesOutput } from './dtos/all-categories.dto';
 import { CategoryInput, CategoryOutput } from './dtos/category.dto';
+import { CreateDishInput, CreateDishOutput } from './dtos/create-dish.dto';
 import { CreateShopInput, CreateShopOutput } from './dtos/create-shop.dto';
+import { DeleteDishInput, DeleteDishOutput } from './dtos/delete-dish.dto';
 import { EditShopInput, EditShopOutput } from './dtos/edit-shop.dto';
 import { DeleteShopInput, DeleteShopOutput } from './dtos/delete-shop.dto';
+import { EditDishInput, EditDishOutput } from './dtos/edit-dish.dto';
 import { ShopInput, ShopOutput } from './dtos/shop.dto';
 import { ShopsInput, ShopsOutput } from './dtos/shops.dto';
-import {
-  SearchShopInput,
-  SearchShopOutput,
-} from './dtos/search-restaurant.dto';
+import { SearchShopInput, SearchShopOutput } from './dtos/search-shop.dto';
 import { Category } from './entities/category.entity';
+import { Dish } from './entities/dish.entity';
 import { Shop } from './entities/shop.entity';
 import { ShopService } from './shops.service';
 
@@ -93,5 +94,37 @@ export class CategoryResolver {
     @Args('input') categoryInput: CategoryInput,
   ): Promise<CategoryOutput> {
     return this.shopService.findCategoryBySlug(categoryInput);
+  }
+}
+
+@Resolver((of) => Dish)
+export class DishResolver {
+  constructor(private readonly shopService: ShopService) {}
+
+  @Mutation((type) => CreateDishOutput)
+  @Role(['Owner'])
+  createDish(
+    @AuthUser() owner: User,
+    @Args('input') createDishInput: CreateDishInput,
+  ): Promise<CreateDishOutput> {
+    return this.shopService.createDish(owner, createDishInput);
+  }
+
+  @Mutation((type) => EditDishOutput)
+  @Role(['Owner'])
+  editDish(
+    @AuthUser() owner: User,
+    @Args('input') editDishInput: EditDishInput,
+  ): Promise<EditDishOutput> {
+    return this.shopService.editDish(owner, editDishInput);
+  }
+
+  @Mutation((type) => DeleteDishOutput)
+  @Role(['Owner'])
+  deleteDish(
+    @AuthUser() owner: User,
+    @Args('input') deleteDishInput: DeleteDishInput,
+  ): Promise<DeleteDishOutput> {
+    return this.shopService.deleteDish(owner, deleteDishInput);
   }
 }

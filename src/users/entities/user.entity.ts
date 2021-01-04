@@ -10,6 +10,7 @@ import { CoreEntity } from 'src/common/entities/core.entity';
 import { InternalServerErrorException } from '@nestjs/common';
 import { IsBoolean, IsEmail, IsEnum, IsString } from 'class-validator';
 import { Shop } from 'src/shops/entities/shop.entity';
+import { Order } from 'src/orders/entities/order.entity';
 
 export enum UserRole {
   Client = 'Client',
@@ -46,6 +47,14 @@ export class User extends CoreEntity {
   @Field((type) => [Shop])
   @OneToMany((type) => Shop, (shop) => shop.owner)
   shops: Shop[];
+
+  @Field((type) => [Order])
+  @OneToMany((type) => Order, (order) => order.customer)
+  orders: Order[];
+
+  @Field((type) => [Order])
+  @OneToMany((type) => Order, (order) => order.driver)
+  rides: Order[];
 
   @BeforeInsert()
   @BeforeUpdate()
